@@ -90,13 +90,6 @@ def fetch_tag_metadata(asg_name):
     return tag_value.split("@")
 
 
-# Updates the name tag of an instance
-def update_name_tag(instance_id, hostname):
-    tag_name = hostname.split(".")[0]
-    logger.info("Updating name tag for instance-id %s with: %s", instance_id, tag_name)
-    ec2.create_tags(Resources=[instance_id], Tags=[{"Key": "Name", "Value": tag_name}])
-
-
 # Updates a Route53 record
 def update_record(zone_id, ips, hostname):
     if len(ips) == 0:
@@ -145,7 +138,6 @@ def process_asg(auto_scaling_group_name, hostname, ignore_instance):
             ipAddr = fetch_ip_from_ec2(instance["InstanceId"])
             if ipAddr is not None:
                 ips.append({"Value": ipAddr})
-                update_name_tag(instance["InstanceId"], hostname)
     return ips
 
     # Processes a scaling event
