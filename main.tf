@@ -107,7 +107,7 @@ resource "aws_lambda_function" "autoscale_handling" {
   function_name    = format("%s-%s", var.vpc_name, var.autoscale_handler_unique_identifier)
   role             = aws_iam_role.autoscale_handling.arn
   handler          = "autoscale.lambda_handler"
-  runtime          = "python3.8"
+  runtime          = "python3.12"
   source_code_hash = filebase64sha256(data.archive_file.autoscale.output_path)
   description      = "Handles DNS for autoscaling groups by receiving autoscaling notifications and setting/deleting records from route53"
   environment {
@@ -148,7 +148,7 @@ resource "aws_lambda_function" "autoscale_multihost_handling" {
   function_name    = format("%s-%s-multi", var.vpc_name, var.autoscale_handler_unique_identifier)
   role             = aws_iam_role.autoscale_handling.arn
   handler          = "multihost.lambda_handler"
-  runtime          = "python3.8"
+  runtime          = "python3.12"
   source_code_hash = filebase64sha256(data.archive_file.multihost.output_path)
   description      = "Handles DNS for autoscaling groups by receiving autoscaling notifications and setting/deleting records from route53"
   environment {
