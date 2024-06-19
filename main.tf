@@ -1,9 +1,31 @@
 resource "aws_sns_topic" "autoscale_handling" {
-  name = format("%s-%s", var.vpc_name, var.autoscale_handler_unique_identifier)
+  name              = format("%s-%s", var.vpc_name, var.autoscale_handler_unique_identifier)
+  kms_master_key_id = aws_kms_key.autoscale_handling.arn
 }
 
 resource "aws_sns_topic" "autoscale_multihost_handling" {
-  name = format("%s-%s-multi", var.vpc_name, var.autoscale_handler_unique_identifier)
+  name              = format("%s-%s-multi", var.vpc_name, var.autoscale_handler_unique_identifier)
+  kms_master_key_id = aws_kms_key.autoscale_handling.arn
+}
+
+resource "aws_kms_key" "autoscale_handling" {
+  description             = format("%s-%s-topic-key", var.vpc_name, var.autoscale_handler_unique_identifier)
+  deletion_window_in_days = 10
+  enable_key_rotation     = true
+  policy                  = data.aws_iam_policy_document.inspector_topic_kms.json
+}
+
+data "aws_iam_policy_document" "inspector_topic_kms" {
+  statement {
+    sid    = "Enable IAM User Permissions"
+    effect = "Allow"
+    principals {
+      type        = "AWS"
+      identifiers = ["arn:${data.aws_partition.current.partition}:iam::${data.aws_caller_identity.current.account_id}:root"]
+    }
+    actions   = ["kms:*"]
+    resources = ["*"]
+  }
 }
 
 resource "aws_iam_role_policy" "autoscale_handling" {
@@ -87,6 +109,11 @@ resource "aws_iam_role_policy" "lifecycle_policy" {
 }
 
 data "aws_iam_policy_document" "lifecycle_policy" {
+  statement {
+    effect    = "Allow"
+    actions   = ["kms:GenerateDataKey", "kms:Decrypt"]
+    resources = [aws_kms_key.autoscale_handling.arn]
+  }
   statement {
     effect    = "Allow"
     actions   = ["sns:Publish", "autoscaling:CompleteLifecycleAction"]
